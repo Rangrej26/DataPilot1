@@ -7,7 +7,10 @@ metadata inspection, memory optimization, and pre-packaged academic datasets.
 import os
 import io
 import pandas as pd
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:
+    st = None
 from typing import Dict, List, Tuple, Any, Optional
 
 SAMPLE_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "sample_data")
@@ -50,7 +53,8 @@ def get_excel_sheet_names(uploaded_file) -> List[str]:
         excel_file = pd.ExcelFile(uploaded_file)
         return excel_file.sheet_names
     except Exception as e:
-        st.error(f"Error reading Excel sheets: {str(e)}")
+        if st is not None:
+            st.error(f"Error reading Excel sheets: {str(e)}")
         return []
 
 

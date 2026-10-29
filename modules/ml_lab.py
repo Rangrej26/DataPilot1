@@ -74,17 +74,53 @@ def get_available_models(task_type: str) -> List[str]:
 
 def check_target_leakage(df: pd.DataFrame, target_col: str, candidate_features: List[str]) -> List[Dict[str, Any]]:
     """
-    Checks for potential data leakage (features with suspiciously high correlation >= 0.95 with target).
+    Checks for potential data leakage (features with suspiciously high correlation >= 0.95 with target,
+    or unique identifier columns that cause memorization).
     """
     warnings = []
-    if not pd.api.types.is_numeric_dtype(df[target_col]):
+    total_rows = len(df)
+    if total_rows == 0 or target_col not in df.columns:
         return warnings
 
+    # Convert target to numeric for correlation testing if possible
+    target_series = df[target_col]
+    if not pd.api.types.is_numeric_dtype(target_series):
+        try:
+            target_numeric = pd.Series(pd.factorize(target_series.astype(str))[0], index=df.index, dtype=float)
+        except Exception:
+            target_numeric = None
+    else:
+        target_numeric = target_series.astype(float)
+
     for col in candidate_features:
-        if col != target_col and pd.api.types.is_numeric_dtype(df[col]):
+        if col == target_col or col not in df.columns:
+            continue
+        
+        series = df[col]
+        
+        # 1. Check for identifier columns (ID / Code / UUID or 100% unique values)
+        c_lower = col.lower()
+        unique_cnt = series.nunique()
+        if unique_cnt > 1 and unique_cnt >= int(total_rows * 0.95):
+            warnings.append({
+                "feature": col,
+                "correlation": 1.0,
+                "warning": f"Feature '{col}' appears to be a unique row identifier ({unique_cnt} distinct values for {total_rows} rows). Including IDs causes severe model overfitting / memorization."
+            })
+            continue
+        elif any(k in c_lower for k in ["_id", "customer_id", "emp_id", "patient_id", "tracking_code", "uuid"]):
+            warnings.append({
+                "feature": col,
+                "correlation": 1.0,
+                "warning": f"Feature '{col}' has an identifier naming pattern. It is strongly recommended to exclude ID fields from training."
+            })
+            continue
+
+        # 2. Check numerical correlation with target
+        if target_numeric is not None and pd.api.types.is_numeric_dtype(series):
             try:
-                corr = abs(df[col].corr(df[target_col]))
-                if corr >= 0.95:
+                corr = abs(float(series.corr(target_numeric)))
+                if corr >= 0.95 and not np.isnan(corr):
                     warnings.append({
                         "feature": col,
                         "correlation": round(corr, 3),
@@ -92,6 +128,7 @@ def check_target_leakage(df: pd.DataFrame, target_col: str, candidate_features: 
                     })
             except Exception:
                 pass
+
     return warnings
 
 
@@ -134,13 +171,14 @@ class MLTrainingPipeline:
 
     def _engineer_features(self, df_features: pd.DataFrame) -> Tuple[pd.DataFrame, List[str], List[str]]:
         """
-        Engineers features: decomposes datetime features into numeric components,
-        separates numeric and categorical features.
+        Engineers features: decomposes datetime and date-string features into numeric components,
+        caps high-cardinality categorical features, and separates numeric and categorical features.
         """
         df_out = df_features.copy()
         self.datetime_features = []
 
         for col in df_features.columns:
+            # Check already datetime64
             if pd.api.types.is_datetime64_any_dtype(df_features[col]):
                 self.datetime_features.append(col)
                 df_out[f"{col}_year"] = df_features[col].dt.year
@@ -148,6 +186,26 @@ class MLTrainingPipeline:
                 df_out[f"{col}_day"] = df_features[col].dt.day
                 df_out[f"{col}_dayofweek"] = df_features[col].dt.dayofweek
                 df_out.drop(columns=[col], inplace=True)
+            elif any(k in col.lower() for k in ["date", "time", "timestamp"]) and not pd.api.types.is_numeric_dtype(df_features[col]):
+                # Attempt date conversion for string dates
+                try:
+                    parsed_dt = pd.to_datetime(df_features[col], errors="coerce")
+                    if parsed_dt.notnull().sum() >= max(5, int(len(df_features) * 0.5)):
+                        self.datetime_features.append(col)
+                        df_out[f"{col}_year"] = parsed_dt.dt.year.fillna(2024).astype(int)
+                        df_out[f"{col}_month"] = parsed_dt.dt.month.fillna(1).astype(int)
+                        df_out[f"{col}_day"] = parsed_dt.dt.day.fillna(1).astype(int)
+                        df_out[f"{col}_dayofweek"] = parsed_dt.dt.dayofweek.fillna(0).astype(int)
+                        df_out.drop(columns=[col], inplace=True)
+                except Exception:
+                    pass
+
+        # Handle high cardinality in remaining categorical features
+        cat_candidates = list(df_out.select_dtypes(include=["object", "category", "string", "bool"]).columns)
+        for col in cat_candidates:
+            if df_out[col].nunique() > 25:
+                top_25 = df_out[col].value_counts().nlargest(25).index.tolist()
+                df_out[col] = df_out[col].apply(lambda x: x if pd.isnull(x) or x in top_25 else "Other")
 
         num_features = list(df_out.select_dtypes(include=["number"]).columns)
         cat_features = list(df_out.select_dtypes(include=["object", "category", "string", "bool"]).columns)

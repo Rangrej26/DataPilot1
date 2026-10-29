@@ -17,7 +17,10 @@ Strict, reference-locked SaaS design system using exact color specifications:
 
 from typing import Dict, List, Optional, Any
 import datetime
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:
+    st = None
 import pandas as pd
 import plotly.io as pio
 
@@ -31,12 +34,49 @@ def render_html(html_str: str):
     """
     clean_lines = [line.strip() for line in html_str.splitlines() if line.strip()]
     clean_html = "\n".join(clean_lines)
-    st.markdown(clean_html, unsafe_allow_html=True)
+    if st is not None:
+        st.markdown(clean_html, unsafe_allow_html=True)
 
 
 # Locked Color Palettes Configuration
 # Sleek Enterprise Dark Color Palettes Configuration (Linear / Vercel / Supabase aesthetic)
 THEMES = {
+    "Professional SaaS": {
+        "bg_primary": "#E8E8E8",
+        "bg_secondary": "#FFFFFF",
+        "bg_sidebar": "#222225",
+        "border_color": "#D5D7DC",
+        "text_primary": "#202124",
+        "text_secondary": "#62636B",
+        "text_body": "#202124",
+        "sidebar_text_primary": "#FFFFFF",
+        "sidebar_text_secondary": "#C6C6CC",
+        "accent": "#D8F45B",
+        "accent_hover": "#C8E645",
+        "accent_lavender": "#B9ADF5",
+        "accent_dark": "#222225",
+        "card_shadow": "0 1px 3px rgba(0, 0, 0, 0.05)",
+        "plotly_template": "plotly_white",
+        "chart_colors": ["#222225", "#818CF8", "#B9ADF5", "#10B981", "#F59E0B", "#EF4444"]
+    },
+    "Professional Light": {
+        "bg_primary": "#E8E8E8",
+        "bg_secondary": "#FFFFFF",
+        "bg_sidebar": "#222225",
+        "border_color": "#D5D7DC",
+        "text_primary": "#202124",
+        "text_secondary": "#62636B",
+        "text_body": "#202124",
+        "sidebar_text_primary": "#FFFFFF",
+        "sidebar_text_secondary": "#C6C6CC",
+        "accent": "#D8F45B",
+        "accent_hover": "#C8E645",
+        "accent_lavender": "#B9ADF5",
+        "accent_dark": "#222225",
+        "card_shadow": "0 1px 3px rgba(0, 0, 0, 0.05)",
+        "plotly_template": "plotly_white",
+        "chart_colors": ["#222225", "#818CF8", "#B9ADF5", "#10B981", "#F59E0B", "#EF4444"]
+    },
     "Enterprise Dark": {
         "bg_primary": "#131722",
         "bg_secondary": "#1E222D",
@@ -758,7 +798,8 @@ def load_custom_css():
     }
     </style>
     """
-    st.markdown(css, unsafe_allow_html=True)
+    if st is not None:
+        st.markdown(css, unsafe_allow_html=True)
 
 
 def apply_theme_css(theme_name: str = "Enterprise Dark"):
@@ -988,13 +1029,13 @@ def render_flux_dark_card(*args, **kwargs):
     pass
 
 
-def get_theme_colors(theme_name: str = "Flux Bento") -> List[str]:
+def get_theme_colors(theme_name: str = "Professional SaaS") -> List[str]:
     """Returns the color list for Plotly charts matching current theme."""
-    theme = THEMES.get(theme_name, THEMES["Flux Bento"])
+    theme = THEMES.get(theme_name, THEMES["Professional SaaS"])
     return theme["chart_colors"]
 
 
-def get_plotly_theme(theme_name: str = "Flux Bento") -> str:
+def get_plotly_theme(theme_name: str = "Professional SaaS") -> str:
     """Returns the plotly layout template name for current theme."""
-    theme = THEMES.get(theme_name, THEMES["Flux Bento"])
+    theme = THEMES.get(theme_name, THEMES["Professional SaaS"])
     return theme["plotly_template"]

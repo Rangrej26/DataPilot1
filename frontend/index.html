@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataPilot AI — Your All-in-One Data Analyst Workspace</title>
+  
+  <!-- Modern Inter Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Interactive Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <!-- Strict Design System Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-wrapper">
+          <div class="brand-logo">DP</div>
+          <div class="brand-info">
+            <span class="brand-title">DataPilot AI</span>
+            <span class="brand-subtitle">Analyst Workspace</span>
+          </div>
+        </div>
+        <span class="project-badge">M.Sc. Data Science Project</span>
+      </div>
+
+      <!-- Navigation Items -->
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-page="home">
+          <span class="nav-icon">📊</span>
+          <span>Home / Overview</span>
+        </a>
+        <a class="nav-item" data-page="upload">
+          <span class="nav-icon">📁</span>
+          <span>Upload Dataset</span>
+        </a>
+        <a class="nav-item" data-page="explorer">
+          <span class="nav-icon">🔍</span>
+          <span>Data Explorer</span>
+        </a>
+        <a class="nav-item" data-page="cleaning">
+          <span class="nav-icon">✨</span>
+          <span>Smart Data Cleaning</span>
+        </a>
+        <a class="nav-item" data-page="charts">
+          <span class="nav-icon">📈</span>
+          <span>Chart Guide</span>
+        </a>
+        <a class="nav-item" data-page="sql">
+          <span class="nav-icon">⚡</span>
+          <span>SQL Assistant</span>
+        </a>
+        <a class="nav-item" data-page="analyst">
+          <span class="nav-icon">🤖</span>
+          <span>AI Data Analyst</span>
+        </a>
+        <a class="nav-item" data-page="ml">
+          <span class="nav-icon">🔮</span>
+          <span>Machine Learning Lab</span>
+        </a>
+        <a class="nav-item" data-page="reports">
+          <span class="nav-icon">📑</span>
+          <span>Reports & Exports</span>
+        </a>
+        <a class="nav-item" data-page="settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings & Theme</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar Footer (Active Dataset Widget) -->
+      <div class="sidebar-footer">
+        <div class="active-dataset-card" id="sidebar-active-dataset">
+          <div class="active-dataset-label">
+            <span>Active Dataset</span>
+            <span class="badge badge-lime" id="sidebar-health-badge">100%</span>
+          </div>
+          <div class="active-dataset-name" id="sidebar-dataset-name">No dataset loaded</div>
+          <div class="active-dataset-stats" id="sidebar-dataset-stats">0 rows &bull; 0 columns</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="workspace">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-title-section">
+          <h1 class="topbar-title" id="page-header-title">Home / Overview</h1>
+          <p class="topbar-subtitle" id="page-header-subtitle">Intelligent dataset understanding and semantic profiling</p>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Active Dataset Selector -->
+          <select class="form-select" id="dataset-selector" style="width: 220px; font-size: 13.5px; padding: 7px 10px;">
+            <option value="">Select or upload a dataset...</option>
+          </select>
+
+          <!-- Quick Sample Dataset Button -->
+          <button class="btn btn-secondary btn-sm" id="btn-quick-sample">
+            <span>⚡ Load Sample Data</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic Page Content Container -->
+      <div class="content-area" id="main-content">
+        <!-- Rendered dynamically by app.js -->
+        <div class="card" style="text-align: center; padding: 48px;">
+          <div class="spinner"></div>
+          <p style="margin-top: 12px; color: var(--text-secondary);">Initializing DataPilot AI Workspace...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+
